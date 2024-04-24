@@ -9,28 +9,29 @@
 
     <style>
         body, html {
-    height: 100%;
-    margin: 0;
-    font-family: 'Palatino';
-    background: white;
-}
+            height: 100%;
+            margin: 0;
+            font-family: 'Palatino';
+            background: white;
+        }
 
-#map {
-    position: relative;
-    width: 50%; 
-    height: calc(100vh - 70px); /* Adjust height based on viewport height */
-}
+        #map {
+            position: relative;
+            width: 50%; 
+            height: calc(100vh - 70px); /* Adjust height based on viewport height */
+        }
 
-.footer {
-    text-align: center;
-    padding: 10px 20px;
-    color: #fff;
-    position: fixed;
-    width: 100%;
-    bottom: 0;
-    height: 30px;
-}        
-.container-fluid {
+        .footer {
+            text-align: center;
+            padding: 10px 20px;
+            color: #fff;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+            height: 30px;
+        }        
+
+        .container-fluid {
             padding-left: 0;
             padding-right: 0;
         }
@@ -40,8 +41,25 @@
         }
 
         .btn-favorite {
-            float: right; /* Align button to the right of list item */
+        float: right;
+        background-color: #007bff; /* Blue background color */
+        color: #fff; /* White text color */
+        border: none;
+        padding: 5px 10px;
+        border-radius: 5px;
+        cursor: pointer;
         }
+
+        .btn-favorite:hover {
+        background-color: #0056b3; /* Darker blue on hover */
+        }
+
+        .btn-favorite-highlight {
+        background-color: #FFC0CB; /* Yellow background color */
+        color: #212529; /* Dark text color */
+        }
+
+
     </style>
 </head>
 <body>
@@ -56,80 +74,95 @@
         </div>
     </nav>
 
- <!-- Main Content -->
- <div class="container-fluid">
-    <div class="row">
-        
-        <!-- Map Column -->
-        <div class="col-md-8" id="map">
-            <!-- Map goes here -->
-        </div>
-
-        <!-- Sidebar Column for Places -->
-        <div class="col-md-5">
-            <!-- Search and Category Tabs -->
-            <div class="input-group mb-4">
-                <input type="text" class="form-control" placeholder="Enter a city..." aria-label="Enter a city..." aria-describedby="button-addon2">
-                <button class="btn btn-outline-secondary" type="button" onclick="searchRestaurants()">Search</button>
+    <!-- Main Content -->
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Map Column -->
+            <div class="col-md-8" id="map">
+                <!-- Map goes here -->
             </div>
 
-            
-           
-
-
+            <!-- Sidebar Column for Places -->
+            <div class="col-md-5">
+                <!-- Search and Category Tabs -->
+                <div class="input-group mb-4">
+                    <input type="text" class="form-control" id="search-input" placeholder="Enter a city..." aria-label="Enter a city..." aria-describedby="button-addon2">
+                    <button class="btn btn-outline-secondary" type="button" onclick="searchRestaurants()">Search</button>
+                </div>
+                <div id="restaurant-list" class="list-group">
+                    <!-- Restaurant list will go here -->
+                </div>
+            </div>
         </div>
-
     </div>
-</div>
-
 
     <!-- footer   -->
     <div class="footer">
         Team Black Dining Discoveries © 2024
     </div>
 
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
-    <script defer type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAElZwbBxCLL9qXIkw0CeUXxtsdLsQgKvM&callback"></script>
+    <script defer type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAElZwbBxCLL9qXIkw0CeUXxtsdLsQgKvM&callback=initMap"></script>
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const defaultCenter = { lat: 39.7684, lng: -86.1581 };
-        const map = new google.maps.Map(document.getElementById("map"), {
-            zoom: 12,
-            center: defaultCenter,
-        });
-    });
+        function initMap() {
+            const defaultCenter = { lat: 39.7684, lng: -86.1581 };
+            const map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 12,
+                center: defaultCenter,
+            });
 
-    function searchRestaurants() {
-        const city = document.getElementById('search-input').value.trim();
-        if (city) {
-            fetch(`http://localhost:3000/api/v1/restaurants?city=${city}`)
-                .then(response => response.json())
-                .then(restaurants => {
-                    const restaurantList = document.getElementById('restaurant-list');
-                    restaurantList.innerHTML = ''; // Clear previous results
-                    restaurants.forEach(restaurant => {
-                        const listItem = document.createElement('div');
-                        listItem.className = 'list-group-item';
-                        listItem.textContent = restaurant.name;
+            window.searchRestaurants = function() {
+                const city = document.getElementById('search-input').value.trim();
+                if (city) {
+                    fetch(`http://localhost:3000/api/v1/restaurants?city=${city}`)
+                        .then(response => response.json())
+                        .then(restaurants => {
+                            const restaurantList = document.getElementById('restaurant-list');
+                            restaurantList.innerHTML = ''; // Clear previous results
+                            restaurants.forEach(restaurant => {
+                                const listItem = document.createElement('div');
+                                listItem.className = 'list-group-item';
+                                listItem.textContent = restaurant.name;
 
-                        const favButton = document.createElement('button');
-                        favButton.textContent = 'Add to Favorites';
-                        favButton.className = 'btn btn-primary btn-sm btn-favorite';
-                        favButton.onclick = () => addToFavorites(restaurant);
+                                const favButton = document.createElement('button');
+                                favButton.textContent = 'Add to Favorites';
+                                favButton.className = 'btn btn-primary btn-sm btn-favorite';
+                                favButton.onclick = () => addToFavorites(restaurant);
 
-                        listItem.appendChild(favButton);
-                        restaurantList.appendChild(listItem);
-                    });
-                })
-                .catch(error => console.error('Error fetching restaurants:', error));
+                                listItem.appendChild(favButton);
+                                restaurantList.appendChild(listItem);
+                            });
+                            if (restaurants.length > 0) {
+                                const firstRestaurant = restaurants[0];
+                                const zipCode = firstRestaurant.zipcode;
+                                const address = zipCode.toString(); 
+                                const geocoder = new google.maps.Geocoder();
+                                geocoder.geocode({ address: address }, function(results, status) {
+                                    if (status === 'OK') {
+                                        map.setCenter(results[0].geometry.location);
+                                    } else {
+                                        console.error('Geocode was not successful for the following reason:', status);
+                                    }
+                                });
+                            }
+                        })
+                        .catch(error => console.error('Error fetching restaurants:', error));
+                }
+            };
+
+            window.addToFavorites = function(restaurant) {
+                const favButton = event.target;
+                if (favButton.classList.contains('btn-favorite-highlight')) {
+                    favButton.classList.remove('btn-favorite-highlight');
+                    removeFavorite(restaurant); // Remove from favorites
+                } else {
+                    favButton.classList.add('btn-favorite-highlight');
+                    addFavorite(restaurant); // Add to favorites
+                }
+                // Implement this function based on your requirements (e.g., local storage or server-side)
+                console.log('Added to favorites:', restaurant.name);
+            };
         }
-    }
-
-    function addToFavorites(restaurant) {
-        // Implement this function based on your requirements (e.g., local storage or server-side)
-        console.log('Added to favorites:', restaurant.name);
-    }
+        
     </script>
 </body>
 </html>
