@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@google-cloud/firestore": "^7.6.0",
+    "@google-cloud/storage": "^7.10.2",
+    "cors": "^2.8.5"
+  }
+}

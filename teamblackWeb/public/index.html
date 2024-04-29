@@ -113,7 +113,7 @@
             window.searchRestaurants = function() {
                 const city = document.getElementById('search-input').value.trim();
                 if (city) {
-                    fetch(`http://localhost:3000/api/v1/restaurants?city=${city}`)
+                    fetch(`https://sp24-41200-teamblack-project.uc.r.appspot.com/api/v1/restaurants?city=${city}`)
                         .then(response => response.json())
                         .then(restaurants => {
                             const restaurantList = document.getElementById('restaurant-list');
@@ -126,7 +126,7 @@
                                 const favButton = document.createElement('button');
                                 favButton.textContent = 'Add to Favorites';
                                 favButton.className = 'btn btn-primary btn-sm btn-favorite';
-                                favButton.onclick = () => addToFavorites(restaurant);
+                                favButton.onclick = () => addRestaurant(restaurant);
 
                                 listItem.appendChild(favButton);
                                 restaurantList.appendChild(listItem);
@@ -149,18 +149,47 @@
                 }
             };
 
+            window.addRestaurant = function(restaurant) {
+                console.log('Restaurant object:', restaurant); 
+                addToFavorites(restaurant);
+                addRestaurantToFavorites(restaurant.name, restaurant.city);
+            };
             window.addToFavorites = function(restaurant) {
+                console.log('Adding to favorites:', restaurant); 
                 const favButton = event.target;
                 if (favButton.classList.contains('btn-favorite-highlight')) {
                     favButton.classList.remove('btn-favorite-highlight');
                     removeFavorite(restaurant); // Remove from favorites
                 } else {
                     favButton.classList.add('btn-favorite-highlight');
-                    addFavorite(restaurant); // Add to favorites
+                    addRestaurantToFavorites(restaurant); // Add to favorites
                 }
                 // Implement this function based on your requirements (e.g., local storage or server-side)
                 console.log('Added to favorites:', restaurant.name);
             };
+            window.addRestaurantToFavorites = function(restaurantName, city) {
+                console.log('Adding restaurant to favorites:', restaurantName, city);
+                // Make an HTTP POST request
+                fetch('https://us-central1-sp24-41200-teamblack-project.cloudfunctions.net/addRestaurantToFavorite', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name: restaurantName, city:city}),
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Handle success response
+                        console.log('Restaurant added to favorites successfully');
+                    }
+                })
+                .catch(error => {
+                    // Handle network error
+                    console.error('Error adding restaurant to favorites:', error);
+                });
+            };
+                    
+
         }
         
     </script>
