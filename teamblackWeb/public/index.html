@@ -123,13 +123,28 @@
                                 listItem.className = 'list-group-item';
                                 listItem.textContent = restaurant.name;
 
+                                // Container for restaurant details
+                                const detailsContainer = document.createElement('div');
+                                detailsContainer.className = 'restaurant-details';
+                                detailsContainer.style.display = 'none'; // 
+
+                                //Function for when Restaurant Name is clicked on
+                                listItem.addEventListener('click', function() {
+                                toggleRestaurantDetails(detailsContainer); // Toggle details visibility
+                                fetchRestaurantDetails(restaurant._id, detailsContainer); // Fetch and display details
+                                });
+
+
+                                //Favorite Button
                                 const favButton = document.createElement('button');
                                 favButton.textContent = 'Add to Favorites';
                                 favButton.className = 'btn btn-primary btn-sm btn-favorite';
                                 favButton.onclick = () => addRestaurant(restaurant);
 
                                 listItem.appendChild(favButton);
+                                listItem.appendChild(detailsContainer);
                                 restaurantList.appendChild(listItem);
+                                
                             });
                             if (restaurants.length > 0) {
                                 const firstRestaurant = restaurants[0];
@@ -149,26 +164,66 @@
                 }
             };
 
+
+            window.toggleRestaurantDetails = function(detailsContainer) {
+                if (detailsContainer.style.display === 'none') {
+                    detailsContainer.style.display = 'block';
+                } else {
+                    detailsContainer.style.display = 'none';
+                }
+            };
+
+            //Function that calls two other functions
             window.addRestaurant = function(restaurant) {
                 console.log('Restaurant object:', restaurant); 
                 addToFavorites(restaurant);
-                addRestaurantToFavorites(restaurant.name, restaurant.city);
             };
+           
+            
             window.addToFavorites = function(restaurant) {
-                console.log('Adding to favorites:', restaurant); 
+               // console.log('Adding to favorites:', restaurant); 
                 const favButton = event.target;
                 if (favButton.classList.contains('btn-favorite-highlight')) {
                     favButton.classList.remove('btn-favorite-highlight');
-                    removeFavorite(restaurant); // Remove from favorites
+                    removeRestaurantFromFavorites(restaurant); // Remove from favorites
+                    console.log('Removed from favorites:', restaurant.name);
                 } else {
                     favButton.classList.add('btn-favorite-highlight');
-                    addRestaurantToFavorites(restaurant); // Add to favorites
+                    addRestaurantToFavorites(restaurant.name, restaurant.city);
+                    console.log('Added to favorites:', restaurant.name);
                 }
-                // Implement this function based on your requirements (e.g., local storage or server-side)
-                console.log('Added to favorites:', restaurant.name);
+                
             };
+
+            //Function for fetching Restaurant Details
+            window.fetchRestaurantDetails = function(restaurantId, detailsContainer) {
+                const city = document.getElementById('search-input').value.trim(); // city input
+                fetch(`https://sp24-41200-teamblack-project.uc.r.appspot.com/api/v1/restaurants?city=${city}`)
+                    .then(response => response.json())
+                    .then(restaurants => {
+                        const restaurantDetails = restaurants.find(restaurant => restaurant._id === restaurantId);
+                        if (restaurantDetails) {
+                            displayRestaurantDetails(restaurantDetails, detailsContainer);
+                        } else {
+                            console.error('No restaurant details found.');
+                        }
+                    })
+                    .catch(error => console.error('Error fetching restaurant details:', error));
+            };
+
+            //Function to display Details
+            window.displayRestaurantDetails=function(restaurantDetails, detailsContainer) {
+            detailsContainer.innerHTML = `
+                <p>Zip Code: ${restaurantDetails.zipcode}</p>
+                <p>Ratings: ${restaurantDetails.weighted_rating_value}</p>
+                <p>Delivery: ${restaurantDetails.delivery_enabled}</p>
+                <p>Pickup: ${restaurantDetails.pickup_enabled}</p>`;
+                detailsContainer.style.marginTop = '10px';//
+            };
+
+            //Function that gets the Cloud Function to add favorite in Firestore
             window.addRestaurantToFavorites = function(restaurantName, city) {
-                console.log('Adding restaurant to favorites:', restaurantName, city);
+                //console.log('Adding restaurant to favorites:', restaurantName, city);
                 // Make an HTTP POST request
                 fetch('https://us-central1-sp24-41200-teamblack-project.cloudfunctions.net/addRestaurantToFavorite', {
                     method: 'POST',
@@ -188,9 +243,34 @@
                     console.error('Error adding restaurant to favorites:', error);
                 });
             };
+            
+            //Function that gets the Cloud Function to Delete favorite in FireStore
+            window.removeRestaurantFromFavorites= function(restaurant) {
+                const city = document.getElementById('search-input').value.trim();
+                // Make an HTTP DELETE request to remove the restaurant from favorites
+                console.log(restaurant);
+                console.log(city);
+                fetch('https://us-central1-sp24-41200-teamblack-project.cloudfunctions.net/removeRestaurantFromFavorites', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name: restaurant.name, city:city}),
                     
-
-        }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Handle success response
+                        console.log('Restaurant removed from favorites successfully');
+                    }
+                })
+                .catch(error => {
+                    // Handle network error
+                    console.error('Error removing restaurant from favorites:', error);
+                });
+            };
+        
+    };
         
     </script>
 </body>
